@@ -1081,8 +1081,7 @@
       <span class="results-count" id="results-count"></span>
     </div>
     <div class="grid-wrapper">
-      <div class="exercise-grid" id="exercise-grid"></div>
-      <div id="loading-msg" style="display:none;text-align:center;padding:40px;color:#888;font-size:16px">⏳ 正在加载 1,324 个动作数据...</div>
+      <div class="exercise-grid" id="exercise-grid"><div id="loading-msg" style="display:none;text-align:center;padding:40px;color:#888;font-size:16px">⏳ 正在加载 1,324 个动作数据...</div></div>
       <div class="load-sentinel" id="load-sentinel">
         <div class="load-spinner" id="load-spinner"></div>
       </div>
@@ -1179,7 +1178,9 @@ let currentLang = 'zh';
 // Fetcher
 async function loadExercises() {
   try {
+    // Show loading state
     const loadingMsg = document.getElementById('loading-msg');
+    const emptyEl = document.querySelector('.empty-state');
     if (loadingMsg) loadingMsg.style.display = 'block';
     
     const res = await fetch('data/exercises.json?' + Date.now());
@@ -1190,6 +1191,7 @@ async function loadExercises() {
     EXERCISES.push(...data);
     state.exercises = EXERCISES;
     
+    // Build search index with bilingual support
     EXERCISES.forEach(ex => {
       const zh = ex.name_zh || '';
       const en = ex.name || '';
@@ -1203,7 +1205,7 @@ async function loadExercises() {
     console.error('Failed to load exercises.json:', e);
     const gridEl = document.getElementById('exercise-grid');
     if (gridEl) {
-      gridEl.innerHTML = '<div class="empty-state"><p>❌ 数据加载失败: ' + e.message + '</p><p style="font-size:13px;color:#888;margin-top:8px">请确认 data/exercises.json 文件已上传到仓库</p></div>';
+      gridEl.innerHTML = '<div class="empty-state"><p>❌ 数据加载失败: ' + e.message + '</p><p style="font-size:13px;color:#888;margin-top:8px">请确保 data/exercises.json 文件已上传到仓库</p></div>';
     }
   }
 }
@@ -1262,15 +1264,11 @@ function L(ex, field, field_zh) {
 
   // ── Data Loading ───────────────────────────────────
   function init() {
-    state.exercises = EXERCISES;
-
-    // Pre-compute search index per exercise
-    state.exercises.forEach(ex => {
-      ex._idx = `${ex.name} ${ex.category} ${ex.target} ${ex.equipment} ${ex.muscle_group}`.toLowerCase();
+    // Load exercises from JSON file (async)
+    loadExercises().then(() => {
+      buildFilterOptions();
+      applyFilters();
     });
-
-    buildFilterOptions();
-    applyFilters();
     wireEvents();
   }
 
