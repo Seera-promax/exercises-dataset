@@ -1266,6 +1266,11 @@ function L(ex, field, field_zh) {
   function init() {
     // Load exercises from JSON file (async)
     loadExercises().then(() => {
+      // Set Chinese labels on load
+      document.querySelectorAll(".filter-section-title").forEach(el => {
+        const fk = el.dataset.filterKey;
+        if (fk && FIELD_LABELS[fk]) el.textContent = FIELD_LABELS[fk]["zh"];
+      });
       buildFilterOptions();
       applyFilters();
     });
